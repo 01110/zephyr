@@ -353,11 +353,33 @@ static void smp_bt_ccc_changed(const struct bt_gatt_attr *attr, uint16_t value)
 #endif
 }
 
-static struct bt_gatt_attr smp_bt_attrs[] = {
-	/* SMP Primary Service Declaration */
-	BT_GATT_PRIMARY_SERVICE(&smp_bt_svc_uuid),
+//static struct bt_gatt_attr smp_bt_attrs[] = {
+//	/* SMP Primary Service Declaration */
+//	BT_GATT_PRIMARY_SERVICE(&smp_bt_svc_uuid),
+//
+//	BT_GATT_CHARACTERISTIC(&smp_bt_chr_uuid.uuid,
+//			       BT_GATT_CHRC_WRITE_WITHOUT_RESP |
+//			       BT_GATT_CHRC_NOTIFY,
+//#ifdef CONFIG_MCUMGR_TRANSPORT_BT_AUTHEN
+//			       BT_GATT_PERM_WRITE_AUTHEN,
+//#else
+//			       BT_GATT_PERM_WRITE,
+//#endif
+//			       NULL, smp_bt_chr_write, NULL),
+//	BT_GATT_CCC(smp_bt_ccc_changed,
+//#ifdef CONFIG_MCUMGR_TRANSPORT_BT_AUTHEN
+//			       BT_GATT_PERM_READ_AUTHEN |
+//			       BT_GATT_PERM_WRITE_AUTHEN),
+//#else
+//			       BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+//#endif
+//};
 
-	BT_GATT_CHARACTERISTIC(&smp_bt_chr_uuid.uuid,
+//static struct bt_gatt_service smp_bt_svc = BT_GATT_SERVICE(smp_bt_attrs);
+
+BT_GATT_SERVICE_DEFINE(smp_bt_svc,
+BT_GATT_PRIMARY_SERVICE(&smp_bt_svc_uuid),
+BT_GATT_CHARACTERISTIC(&smp_bt_chr_uuid.uuid,
 			       BT_GATT_CHRC_WRITE_WITHOUT_RESP |
 			       BT_GATT_CHRC_NOTIFY,
 #ifdef CONFIG_MCUMGR_TRANSPORT_BT_AUTHEN
@@ -366,20 +388,19 @@ static struct bt_gatt_attr smp_bt_attrs[] = {
 			       BT_GATT_PERM_WRITE,
 #endif
 			       NULL, smp_bt_chr_write, NULL),
-	BT_GATT_CCC(smp_bt_ccc_changed,
+BT_GATT_CCC(smp_bt_ccc_changed,
 #ifdef CONFIG_MCUMGR_TRANSPORT_BT_AUTHEN
 			       BT_GATT_PERM_READ_AUTHEN |
 			       BT_GATT_PERM_WRITE_AUTHEN),
 #else
 			       BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
 #endif
-};
-
-static struct bt_gatt_service smp_bt_svc = BT_GATT_SERVICE(smp_bt_attrs);
+);
 
 int smp_bt_notify(struct bt_conn *conn, const void *data, uint16_t len)
 {
-	return bt_gatt_notify(conn, smp_bt_attrs + 2, data, len);
+	//return bt_gatt_notify(conn, smp_bt_attrs + 2, data, len);
+  return bt_gatt_notify(conn, smp_bt_svc.attrs + 2, data, len);
 }
 
 /**
@@ -449,7 +470,8 @@ static int smp_bt_tx_pkt(struct net_buf *nb)
 	uint16_t off = 0;
 	uint16_t mtu_size;
 	struct bt_gatt_notify_params notify_param = {
-		.attr = smp_bt_attrs + 2,
+		//.attr = smp_bt_attrs + 2,
+    .attr = smp_bt_svc.attrs + 2,
 		.func = smp_notify_finished,
 		.data = nb->data,
 	};
@@ -566,12 +588,14 @@ cleanup:
 
 int smp_bt_register(void)
 {
-	return bt_gatt_service_register(&smp_bt_svc);
+	return -1;
+	//return bt_gatt_service_register(&smp_bt_svc);
 }
 
 int smp_bt_unregister(void)
 {
-	return bt_gatt_service_unregister(&smp_bt_svc);
+	return -1;
+	//return bt_gatt_service_unregister(&smp_bt_svc);
 }
 
 /* BT connected callback. */
@@ -667,9 +691,9 @@ static void smp_bt_setup(void)
 
 	rc = smp_transport_init(&smp_bt_transport);
 
-	if (rc == 0) {
-		rc = smp_bt_register();
-	}
+	//if (rc == 0) {
+	//	rc = smp_bt_register();
+	//}
 
 #ifdef CONFIG_SMP_CLIENT
 	if (rc == 0) {
